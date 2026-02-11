@@ -103,7 +103,7 @@ module.exports = { app, db, initDB, closePool, validateString, isValidId };
 
 if (require.main === module) {
   initDB().then(() => {
-    app.listen(port, () => {
+    app.listen(port, '0.0.0.0', () => {
       console.log(`🚀 Server running on port ${port}`);
       console.log(`📊 Health check: http://localhost:${port}/health`);
     });

@@ -9,7 +9,7 @@ COPY backend/package*.json ./backend/
 WORKDIR /app/backend
 RUN npm ci --only=production
 
-# Копируем весь код бэкенда и фронтенда
+# Копируем исходный код
 COPY backend/ ./backend/
 COPY frontend/ ./frontend/
 

@@ -1,7 +1,5 @@
-@'
 [build]
 builder = "nixpacks"
 
 [deploy]
 startCommand = "cd backend && node src/server.js"
-'@ | Out-File -FilePath railway.toml -Encoding UTF8

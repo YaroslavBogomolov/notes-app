@@ -20,7 +20,12 @@ jobs:
 
       - name: Install Railway CLI
         run: npm install -g @railway/cli
-
+      - name: Debug Railway token
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          echo "Token length: ${#RAILWAY_TOKEN}"
+          echo "Token starts with: ${RAILWAY_TOKEN:0:10}"
       - name: Deploy to Railway
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}

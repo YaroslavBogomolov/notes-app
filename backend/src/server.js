@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
+const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
@@ -8,9 +10,12 @@ const port = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static('../frontend'));
 
-// Логирование всех запросов (для отладки)
+// АБСОЛЮТНЫЙ ПУТЬ К ФРОНТЕНДУ
+const frontendPath = path.join(__dirname, '../../frontend');
+app.use(express.static(frontendPath));
+
+// Логирование всех запросов
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.url} - ${new Date().toISOString()}`);
   next();
@@ -43,7 +48,7 @@ async function initDB() {
   }
 }
 
-// ===== УТИЛИТЫ =====
+// УТИЛИТЫ
 function validateString(str) {
   return !!(str && typeof str === 'string' && str.trim().length > 0);
 }
@@ -53,10 +58,22 @@ function isValidId(id) {
   return /^[1-9]\d*$/.test(id);
 }
 
-// ===== ЗАКРЫТИЕ ПУЛА =====
 async function closePool() {
   await pool.end();
 }
+
+// ----- DEBUG: проверка файлов -----
+app.get('/debug', (req, res) => {
+  const indexPath = path.join(frontendPath, 'index.html');
+  const files = fs.existsSync(frontendPath) ? fs.readdirSync(frontendPath) : [];
+  res.json({
+    frontendPath,
+    indexPathExists: fs.existsSync(indexPath),
+    files,
+    cwd: process.cwd(),
+    __dirname
+  });
+});
 
 // ----- API Routes -----
 app.get('/api/notes', async (req, res) => {
@@ -108,6 +125,12 @@ app.get('/health', (req, res) => {
     service: 'Notes API',
     timestamp: new Date().toISOString()
   });
+});
+
+// ----- SPA Fallback -----
+app.get('*', (req, res) => {
+  if (req.path.startsWith('/api/') || req.path === '/health' || req.path === '/debug') return;
+  res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
 module.exports = { app, db, initDB, closePool, validateString, isValidId };

@@ -44,14 +44,22 @@ function validateString(str) {
 
 function isValidId(id) {
   if (!id || typeof id !== 'string') return false;
-  // Только целые положительные числа, без ведущих нулей
   return /^[1-9]\d*$/.test(id);
 }
 
-// ===== ЗАКРЫТИЕ ПУЛА (ДЛЯ ТЕСТОВ) =====
+// ===== ЗАКРЫТИЕ ПУЛА =====
 async function closePool() {
   await pool.end();
 }
+
+// ----- ROOT ROUTE (для Railway health check) -----
+app.get('/', (req, res) => {
+  res.status(200).json({ 
+    status: 'OK', 
+    service: 'Notes API',
+    message: 'Root endpoint – use /health for detailed status' 
+  });
+});
 
 // ----- API Routes -----
 app.get('/api/notes', async (req, res) => {
@@ -96,14 +104,19 @@ app.delete('/api/notes/:id', async (req, res) => {
 });
 
 app.get('/health', (req, res) => {
-  res.json({ status: 'OK', service: 'Notes API', timestamp: new Date().toISOString() });
+  console.log(`🩺 Health check received at ${new Date().toISOString()} from ${req.ip}`);
+  res.status(200).json({
+    status: 'OK',
+    service: 'Notes API',
+    timestamp: new Date().toISOString()
+  });
 });
 
 module.exports = { app, db, initDB, closePool, validateString, isValidId };
 
 if (require.main === module) {
   initDB().then(() => {
-    app.listen(port, () => {
+    app.listen(port, '0.0.0.0', () => {
       console.log(`🚀 Server running on port ${port}`);
       console.log(`📊 Health check: http://localhost:${port}/health`);
     });

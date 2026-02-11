@@ -21,7 +21,6 @@ const db = {
   }
 };
 
-// Инициализация таблицы
 async function initDB() {
   try {
     await db.query(`
@@ -38,6 +37,22 @@ async function initDB() {
   }
 }
 
+// ===== УТИЛИТЫ =====
+function validateString(str) {
+  return !!(str && typeof str === 'string' && str.trim().length > 0);
+}
+
+function isValidId(id) {
+  if (!id || typeof id !== 'string') return false;
+  // Только целые положительные числа, без ведущих нулей
+  return /^[1-9]\d*$/.test(id);
+}
+
+// ===== ЗАКРЫТИЕ ПУЛА (ДЛЯ ТЕСТОВ) =====
+async function closePool() {
+  await pool.end();
+}
+
 // ----- API Routes -----
 app.get('/api/notes', async (req, res) => {
   try {
@@ -51,7 +66,7 @@ app.get('/api/notes', async (req, res) => {
 app.post('/api/notes', async (req, res) => {
   try {
     const { title, content } = req.body;
-    if (!title || title.trim() === '') {
+    if (!validateString(title)) {
       return res.status(400).json({ error: 'Title is required' });
     }
     const result = await db.query(
@@ -67,7 +82,7 @@ app.post('/api/notes', async (req, res) => {
 app.delete('/api/notes/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    if (!id || isNaN(parseInt(id))) {
+    if (!isValidId(id)) {
       return res.status(400).json({ error: 'Invalid note ID' });
     }
     const result = await db.query('DELETE FROM notes WHERE id = $1 RETURNING *', [id]);
@@ -84,7 +99,7 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', service: 'Notes API', timestamp: new Date().toISOString() });
 });
 
-module.exports = { app, db, initDB };
+module.exports = { app, db, initDB, closePool, validateString, isValidId };
 
 if (require.main === module) {
   initDB().then(() => {

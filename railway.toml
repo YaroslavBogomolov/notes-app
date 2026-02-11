@@ -4,4 +4,3 @@ builder = "nixpacks"
 [deploy]
 workingDirectory = "backend"
 startCommand = "node src/server.js"
-healthcheckPath = "/health"

@@ -1,4 +1,4 @@
-name: CI Pipeline
+﻿name: CI Pipeline
 
 on:
   pull_request:
@@ -21,7 +21,20 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-    needs: lint
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: notesdb
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -29,10 +42,12 @@ jobs:
           node-version: '18'
       - run: cd backend && npm ci
       - run: cd backend && npm test
+        env:
+          DATABASE_URL: postgresql://postgres:password@localhost:5432/notesdb
 
   build:
     runs-on: ubuntu-latest
-    needs: test
+    needs: [lint, test]
     steps:
       - uses: actions/checkout@v3
       - run: docker build -t notes-app:${{ github.sha }} .

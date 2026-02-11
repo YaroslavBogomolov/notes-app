@@ -50,4 +50,6 @@ jobs:
     needs: [lint, test]
     steps:
       - uses: actions/checkout@v3
-      - run: docker build -t notes-app:${{ github.sha }} .
+      - name: Build Docker image
+        run: |
+          docker build -f Dockerfile.ci -t notes-app:${{ github.sha }} .

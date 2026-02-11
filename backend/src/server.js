@@ -10,6 +10,12 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('../frontend'));
 
+// Логирование всех запросов (для отладки)
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url} - ${new Date().toISOString()}`);
+  next();
+});
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
@@ -51,15 +57,6 @@ function isValidId(id) {
 async function closePool() {
   await pool.end();
 }
-
-// ----- ROOT ROUTE (для Railway health check) -----
-app.get('/', (req, res) => {
-  res.status(200).json({ 
-    status: 'OK', 
-    service: 'Notes API',
-    message: 'Root endpoint – use /health for detailed status' 
-  });
-});
 
 // ----- API Routes -----
 app.get('/api/notes', async (req, res) => {
@@ -103,6 +100,7 @@ app.delete('/api/notes/:id', async (req, res) => {
   }
 });
 
+// ----- Health Check -----
 app.get('/health', (req, res) => {
   console.log(`🩺 Health check received at ${new Date().toISOString()} from ${req.ip}`);
   res.status(200).json({

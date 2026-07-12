@@ -1,8 +1,13 @@
 class NotesApp {
     constructor() {
-        this.API_BASE = window.location.origin.includes('localhost') 
-            ? 'http://localhost:3000' 
-            : window.location.origin;
+        const hostname = window.location.hostname;
+        if (hostname.includes('github.io')) {
+            this.API_BASE = 'https://notes-app-production-038d.up.railway.app';
+        } else if (hostname === 'localhost' || hostname === '127.0.0.1') {
+            this.API_BASE = 'http://localhost:3000';
+        } else {
+            this.API_BASE = window.location.origin; // например, на Railway
+        }
         this.notes = [];
         this.init();
     }
